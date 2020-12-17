@@ -15,8 +15,130 @@ knitr::opts_chunk$set(
 )
 ```
 
+## Introduction
+
+STAT302package contains four functions that are commoned used to solve statistical problems:  
+
+* my_t.test: Performs a one sample t-test in R.
+* my_lm: Fits a linear model in R.
+* my_knn_cv: Performs a k-nearest neighbors cross-validation.
+* my_rf_cv: Tests how good the random forest model fits in the penguins data set.  
+
+This document will demonstrate the use of these functions with `penguins` and `gapminder` data, 
+which are stored within this package as `my_penguins` and `gapminder`.  
+
+First, install the `STAT302package` from Github with following instruction:
+```{r, eval = FALSE}
+# install.packages("devtools")
+devtools::install_github("WayneWang86/STAT302package")
+```
+
 ```{r setup}
 library(STAT302package)
+library(ggplot2)
+library(tidyverse)
+library(class)
+library(randomForest)
+library(knitr)
+library(kableExtra)
 ```
+
+## my_t.test Tutorial  
+
+### Demonstrate a test of the hypothesis: mean = 60 (null); mean != 60 (alternative)
+In the hypothesis test, the alternative hypothesis is that mean != 60, therefore  
+we use "two.sided" as the value for `alternative`
+
+```{r}
+# testing when alternative equals two.sided
+p_val_1 <- (my_t.test(my_gapminder$lifeExp, alternative = "two.sided", mu = 60))$p_val
+p_val_1
+```
+Bsaed on the result from `my_t.test` function, The p-value is `r p_val_1`. Since the  
+p-value cut-off is 0.05 and the p-value we got here is larger than the cut-off value, 
+we fail to reject the null hypothesis that the mean life expectancy is 60.
+
+### Demonstrate a test of the hypothesis: mu = 60 (null); mu < 60 (alternative)  
+In the hypothesis test, the alternative hypothesis is that mean < 60, therefore  
+we use "less" as the value for `alternative`
+```{r}
+# testing when alternative equals less
+p_val_2 <- (my_t.test(my_gapminder$lifeExp, alternative = "less", mu = 60))$p_val
+p_val_2
+```
+Bsaed on the result from `my_t.test` function, The p-value is `r p_val_2`. Since the  
+p-value cut-off is 0.05 and the p-value we got here is smaller than the cut-off value, 
+we have sufficient evidence to reject the null hypothesis and conclude that the true 
+mean life expectancy is less than 60.
+
+### Demonstrate a test of the hypothesis: mu = 60 (null); mu > 60 (alternative)  
+In the hypothesis test, the alternative hypothesis is that mean > 60, therefore  
+we use "greater" as the value for `alternative`
+```{r}
+# testing when alternative equals greater
+p_val_3 = (my_t.test(my_gapminder$lifeExp, alternative = "greater", mu = 60))$p_val
+p_val_3
+```
+Bsaed on the result from `my_t.test` function, The p-value is `r p_val_3`. Since the  
+p-value cut-off is 0.05 and the p-value we got here is much larger than the cut-off value, 
+we fail to reject the null hypothesis.  
+
+
+## A tutorial for my_lm  
+
+The task here is to use `my_lm` function to demonstrate a regression using lifeExp as your  
+response variable and gdpPercap and continent as explanatory variables.
+
+```{r}
+lifeExp_lm <- my_lm(lifeExp ~ gdpPercap+continent, my_gapminder)
+lifeExp_lm
+```
+Here we will take a close look at the `gdpPercap` coefficient in this linear model. The `gdpPercap`
+coefficient means that with other covariates stay unchanged, when the `gdpPercap` increase by one
+dollar, the life expectancy would increase by around 0.0004 year. This indicates that there is a 
+positive correlation between `gdpPercap` and `lifeExp`.  
+
+To perform a hypothesis test associated with the `gdpPercap` coefficient, we can set the null 
+hypothesis as that the `gdpPercap` coefficient is 0 (meaning it has no effects on the value 
+of `lifeExp`), and the alternative hypothesis would be that the `gdpPercap` coefficient is not 0.  
+As we can see from the table, the related p-value for `gdpPercap` is extremely small, which 
+obviously is smaller than the cut-off value of 0.05, therefore, we have sufficient evidence to 
+reject the null hypothesis that the `gdpPercep` coefficient is 0.  
+
+We will then use `ggplot2` library to plot out the Actual and fitted values
+```{r}
+# get coefficients from all covariates
+coef <- lifeExp_lm$Estimate
+
+# calculate the fitted values
+my_matrix <- model.matrix(lifeExp ~ gdpPercap + continent, 
+                          data = my_gapminder)
+y_hat <- my_matrix %*% as.matrix(coef)
+
+# create data frame with actual data, fitted data and the continent variable
+my_data <- data.frame("actual" = my_gapminder$lifeExp,
+                      "fitted" = y_hat,
+                      "continent" = my_gapminder$continent)
+
+# create plot
+my_plot <- ggplot(my_data, aes(x = fitted, y = actual, color = continent)) + 
+  geom_point() + 
+  geom_abline(slope = 1, intercept = 0, col = "red") + 
+  labs(title = "Actual v.s. Fitted") + 
+  theme_bw(base_size = 10) + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 12))
+my_plot
+```
+
+We can see that the plots for Africa, America and Asia are almost vertical. It indicates that
+for these three continents, our linear model would predict the life expectancy at a specific range
+for a specific continent. For example, in Africa, the actual life expectancy is ranging from 
+30 to 80 while the fitted life expectancy is concertrate around 50 years old.  
+In addition, our model predict that Africa countries would have the shortest life expectancy while
+Europe and Oceania would have the longest life expectancy.  
+From the plots we can see very clearly that this linear model doesn't fit very well, especially
+for Africa, Asia and Americas, as those data points are almost vertical lines rather than being
+around the best fit line. Therefore, we would conclude that this linear model doesn't fit the 
+data too well and has poor quality to make prediction with.  
 
 
