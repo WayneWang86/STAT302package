@@ -24,7 +24,6 @@
 #'
 #'
 #' @export
-
 my_t.test <- function(x, alternative, mu) {
   alternative_options <- c("two.sided", "less", "greater")
   # Throw an informative error if the alternative is not "two.sided", "less" or "more"

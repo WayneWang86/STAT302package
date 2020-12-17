@@ -26,9 +26,9 @@ A list with two objects:
 This function performs a k-nearest neighbors cross-validation.
 }
 \examples{
-my_penguins <- na.omit(penguins[, 1:6])
-train <- my_penguins[, 3:6]
-my_knn_cv(train, my_penguins$species, 1, 5)
+penguins <- na.omit(my_penguins[, 1:6])
+train <- penguins[, 3:6]
+my_knn_cv(train, penguins$species, 1, 5)
 
 }
 \keyword{prediction}

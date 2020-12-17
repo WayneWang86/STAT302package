@@ -12,12 +12,12 @@
 #'   1. \code{class}: A vector of the predicted class Y^i for all observations
 #'   2. \code{cv_err}: A numeric value with the cross-validation misclassification error
 #'
-#' @import class magrittr dplyr
+#' @import class magrittr stats tidyverse
 #'
 #' @examples
-#' my_penguins <- na.omit(penguins[, 1:6])
-#' train <- my_penguins[, 3:6]
-#' my_knn_cv(train, my_penguins$species, 1, 5)
+#' penguins <- na.omit(my_penguins[, 1:6])
+#' train <- penguins[, 3:6]
+#' my_knn_cv(train, penguins$species, 1, 5)
 #'
 #' @export
 #'
@@ -32,11 +32,11 @@ my_knn_cv <- function(train, cl, k_nn, k_cv) {
 
   for (i in 1:k_cv) {
     # Use one fold as test data while using all other folds as the training data.
-    data_train <- data %>% filter(split != i)
-    data_test <- data %>% filter(split == i)
+    data_train <- data %>% dplyr::filter(split != i)
+    data_test <- data %>% dplyr::filter(split == i)
     # predict the class of the ith fold
-    y_hat <- knn(data_train %>% select(starts_with("x.")),
-                 data_test %>% select(starts_with("x.")),
+    y_hat <- knn(data_train %>% dplyr::select(starts_with("x.")),
+                 data_test %>% dplyr::select(starts_with("x.")),
                  data_train$y, k_nn)
 
     # Add prediction to class vector

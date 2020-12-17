@@ -7,7 +7,7 @@ test_that("my_knn_cv returns a list", {
 })
 
 test_that("negative value for `knn` throws error", {
-  my_penguins <- na.omit(penguins[, 1:6])
+  my_penguins <- na.omit(my_penguins[, 1:6])
   train <- my_penguins[, 3:6]
   expect_error(my_knn_cv(train, my_penguins$species, -1, 5))
 })
