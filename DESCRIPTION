@@ -1,0 +1,14 @@
+Package: STAT302package
+Title: STAT302 Project 2 
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Yifeng",
+           family = "Wang",
+           role = c("aut", "cre"),
+           email = "wyf9686@uw.edu")
+Description: This package includes functions "my_t.test", "my_lm", "my_knn_cv" and "my_rf_cv".
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
