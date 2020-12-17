@@ -142,3 +142,117 @@ around the best fit line. Therefore, we would conclude that this linear model do
 data too well and has poor quality to make prediction with.  
 
 
+## A tutorial for `my_knn_cv` function by using `my_peguins`  
+
+This demonstration we will be using the `my_knn_cv` function with `my_peguins` data to predict  
+output class `species` using covariates `bill_length_mm`, `bill_depth_mm`, `flipper_length_mm`  
+and `body_mass_g` Here will will use 5-fold cross validation (k_cv = 5) and predict the output
+class `species` with with 1-nearest neighbor through 10-nearest neighbors.
+
+```{r}
+penguins <- na.omit(my_penguins[, 1:6])
+# create a matrix to store outputs
+matrix <- matrix(NA, nrow = 10, ncol = 3)
+
+# Performs k-nearest neighbors cross-validation with k from 1 to 10
+for (i in 1 : 10) {
+  # store the value of k_nn in matrix
+  matrix[i, 1] <- i
+  # get output list from my function
+  output <- my_knn_cv(penguins[,3:6], penguins$species, k_cv = 5, k_nn = i)
+  prediction <- output$class
+  # store training misclassification rate
+  matrix[i, 2] <- mean(as.numeric(prediction != penguins$species) ** 2) / nrow(penguins)
+  # store CV misclassification rate
+  matrix[i, 3] <- output$cv_err
+}
+# # create data frame to hold columns from my matrix
+err_compare <- data.frame("k_nn" = matrix[, 1],
+                      "training_misclassification_rate" = matrix[, 2],
+                      "CV_misclassification_rate" = matrix[, 3])
+err_compare
+
+```
+Based on the training misclassification rate and CV misclassification rate for different `k_nn`
+value, we would choose the model with `k_nn` equal to 1 for both of them since when `k_nn` is
+1, the training misclassification rate and CV misclassification rate are the lowest. In practice,
+I would choose the model with lowest CV misclassification rates. The purpose of cross-validation
+is to divide up data into several equal amount of data, then to loop through each chunk of data
+as train data and others as testing data. For example, in our demonstration, when `k_cv` = 5, we
+are dividing up the data into 5 chunks and each time there will be one chunk of data as training
+data and other 4 chunks of data as testing data. The CV misclassification rates we got from 
+`my_knn_cv` function is the mean of five misclassification rates. This would be a better and more
+pracitical way to avoid overfit since we are testing the data for several times. Therefore, I
+would go with the model with lowest CV misclassification rate.
+
+
+## A tutorial for `my_rf_cv`  
+
+For this demonstration, we will use `my_rf_cv` function to predict `body_mass_g` using covariates
+`bill_length_mm`, `bill_depth_mm`, and `flipper_length_mm.`  
+We will iterate through k as 2, 5 and 10:  
+  * For each value of k, run your function 30 times.
+  * For each of the 30 iterations, store the CV estimated MSE.
+
+```{r}
+# store 30 CV estimated MSE when k = 2
+mse_2 <- rep(NA, 30)
+# store 30 CV estimated MSE when k = 2
+mse_5 <- rep(NA, 30)
+# store 30 CV estimated MSE when k = 2
+mse_10 <- rep(NA, 30)
+# For each k, run the function 30 times to generate 30 CV errors.
+for (i in 1:30) {
+  mse_2[i] <- my_rf_cv(2)
+  mse_5[i] <- my_rf_cv(5)
+  mse_10[i] <- my_rf_cv(10)
+}
+
+# mse table for k = 2
+mse_2_df <- data.frame("k_value" = as.factor(rep(2, 30)), "cv_estimated_mse" = mse_2)
+# mse table for k = 5
+mse_5_df <- data.frame("k_value" = as.factor(rep(5, 30)), "cv_estimated_mse" = mse_5)
+# mse table for k = 10
+mse_10_df <- data.frame("k_value" = as.factor(rep(10, 30)), "cv_estimated_mse" = mse_10)
+
+# combine all three dataframes
+mse_df <- rbind(mse_2_df, mse_5_df, mse_10_df)
+
+```
+
+Now, we will make 3 boxplots to display these data in an informative way. Each boxplot is associated with each value of $k$, representing 30 simulations.
+
+```{r fig2, fig.height = 3, fig.width = 5, fig.align = "center"}
+# Make 3 boxplots.
+ggplot(data = mse_df, aes(x = k_value, y = cv_estimated_mse, fill = k_value)) +
+  geom_boxplot() +
+  theme_bw(base_size = 15) +
+  labs(title = "MSE for 30 randomForsts with number of fold of 2, 5 and 10", 
+       x = "k-fold Cross-validation", 
+       y = "CV Estimated MSE") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+# calculate the mean and sd when k = 2
+mse_2_mean <- mean(mse_2_df$cv_estimated_mse)
+mse_2_sd <- sd(mse_2_df$cv_estimated_mse)
+
+# calculate the mean and sd when k = 5
+mse_5_mean <- mean(mse_5_df$cv_estimated_mse)
+mse_5_sd <- sd(mse_5_df$cv_estimated_mse)
+
+# calculate the mean and sd when k = 10
+mse_10_mean <- mean(mse_10_df$cv_estimated_mse)
+mse_10_sd <- sd(mse_10_df$cv_estimated_mse)
+
+mse_table <- data.frame("k_value" = c(2, 5, 10), 
+                        "MSE_mean" = c(mse_2_mean, mse_5_mean, mse_10_mean),
+                        "MSE_sd" = c(mse_2_sd, mse_5_sd, mse_10_sd))
+mse_table
+```
+From the boxplots as well as the mse table, we can tell that the MSE mean and MSE standard 
+deviation when k = 10 is lower than when k = 2 and k = 5. We can tell directly from the boxplots
+that as the value of k increase, the MSE mean and MSE sd decrease. The mse table shows that 
+trends as well. This makes sense since when there are more folds, there will be higher accuracy,
+which would lead to less mean squared error.
